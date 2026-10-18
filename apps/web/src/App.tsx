@@ -281,7 +281,11 @@ function HomePage() {
         <a href="#/dictionary"><h2>Словарь</h2><p>От «ауры» до «я в моменте» — с примерами и контекстом.</p><span>Смотреть все слова ↗</span></a>
         <a href="#/memology"><h2>Мемология</h2><p>Откуда взялся мем, что означает и когда его уместно использовать.</p><span>Разобраться в мемах ↗</span></a>
       </section>
-      <section className="quiz-home-cta"><div><p className="eyebrow"><span /> 10 вопросов · 3 уровня</p><h2>Насколько ты<br />не скуф?</h2><p>Выбери сложность, проверь знание интернет-языка и получи карточку результата для соцсетей.</p></div><a className="button button--light" href="#/quiz">Пройти тест</a></section>
+      <section className="quiz-home-cta">
+        <span className="quiz-home-cta__score" aria-hidden="true">10/10</span>
+        <div><p className="eyebrow"><span /> 10 вопросов · 3 уровня</p><h2>Насколько ты<br />не скуф?</h2><p>Выбери сложность, проверь знание интернет-языка и получи карточку результата для соцсетей.</p></div>
+        <a className="button button--light" href="#/quiz">Пройти тест</a>
+      </section>
       <Suggest />
     </>
   );
@@ -503,7 +507,7 @@ function SubmitPage() {
 }
 
 function Suggest() {
-  return <section className="suggest"><div><h2>Интернет сказал новое?</h2><p>Отправь слово или мем. Регистрация не нужна — публикация появится после проверки редакцией.</p></div><a className="button button--light" href="#/submit">Добавить карточку</a></section>;
+  return <section className="suggest"><div><p className="suggest__label">На модерацию</p><h2>Интернет сказал новое?</h2><p>Отправь слово или мем. Регистрация не нужна — публикация появится после проверки редакцией.</p></div><a className="button button--light" href="#/submit">Добавить карточку</a></section>;
 }
 
 export function App() {
@@ -534,3 +538,4 @@ export function App() {
     </div>
   );
 }
+
