@@ -1,6 +1,7 @@
 .superpowers/
 node_modules/
 dist/
+dist-types/
 .env
 .env.*
 !.env.example
@@ -10,4 +11,6 @@ playwright-report/
 test-results/
 *.tsbuildinfo
 .data/
+.xdg/
+.wrangler/
 

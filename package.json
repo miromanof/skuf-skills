@@ -14,7 +14,10 @@
     "dev": "concurrently -n api,web -c cyan,magenta \"npm run dev -w @skuf-skills/api\" \"npm run dev -w @skuf-skills/web\"",
     "infra:up": "docker compose up -d --wait postgres",
     "db:migrate": "tsx packages/db/src/cli.ts",
-    "admin:setup": "node scripts/admin-setup.mjs"
+    "admin:setup": "node scripts/admin-setup.mjs",
+    "cloudflare:admin-setup": "node scripts/cloudflare-admin-setup.mjs",
+    "check:cloud-deployment": "node scripts/check-cloud-deployment.mjs",
+    "check:mobile-css": "node scripts/check-mobile-css.mjs"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.5.10",
@@ -23,6 +26,7 @@
     "argon2": "^0.45.1",
     "fastify": "^5.2.0",
     "file-type": "^22.2.0",
+    "hono": "^4.13.13",
     "kysely": "^0.29.7",
     "kysely-pglite": "^0.5.0",
     "pg": "^8.23.1",
@@ -32,6 +36,7 @@
     "zod": "^4.6.7"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^5.20261018.1",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.1.0",
     "@types/node": "^22.10.2",
@@ -41,8 +46,10 @@
     "@vitejs/plugin-react": "^4.3.4",
     "concurrently": "^9.1.0",
     "jsdom": "^25.0.1",
+    "miniflare": "^4.20260730.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.5",
-    "vitest": "^5.0.5"
+    "vitest": "^5.0.5",
+    "wrangler": "^4.151.1"
   }
 }

@@ -4,6 +4,7 @@
     { "path": "packages/domain" },
     { "path": "packages/db" },
     { "path": "apps/api" },
+    { "path": "apps/worker" },
     { "path": "apps/web" }
   ]
 }

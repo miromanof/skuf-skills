@@ -20,11 +20,6 @@ export type AdminContent = {
   };
 };
 
-function apiUrl(path: string): string {
-  const origin = ['127.0.0.1', 'localhost'].includes(window.location.hostname) ? 'http://127.0.0.1:3001' : '';
-  return `${origin}${path}`;
-}
-
 export type PublicContent = {
   slug: string; type: 'term' | 'meme'; title: string; explanation: string; example: string; tags: string[];
   context?: string; origin?: string; author?: string; bucket: string; publishedAt: string;
@@ -46,3 +41,5 @@ export async function adminRequest<T>(path: string, init: RequestInit = {}): Pro
   const data = response.status === 204 ? null : await response.json() as T;
   return { response, data };
 }
+import { apiUrl } from './origin.js';
+

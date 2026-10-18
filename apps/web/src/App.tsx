@@ -5,8 +5,10 @@ import { AdminLoginPage } from './features/admin/AdminLoginPage.js';
 import { AdminQueuePage } from './features/admin/AdminQueuePage.js';
 import { AdminEditorPage } from './features/admin/AdminEditorPage.js';
 import { publicRequest, type PublicContent } from './shared/api/client.js';
+import { apiUrl } from './shared/api/origin.js';
+import { QuizPage } from './features/quiz/QuizPage.js';
 
-type Route = 'home' | 'dictionary' | 'memology' | 'submit' | 'admin-login' | 'admin';
+type Route = 'home' | 'dictionary' | 'memology' | 'quiz' | 'submit' | 'admin-login' | 'admin';
 type CardMedia = { kind: 'video'; url: string } | { kind: 'image'; url: string; alt: string };
 type Card = { type: string; title: string; text: string; example: string; accent: string; aliases?: string[]; etymology?: string; context?: string; slug?: string; media?: CardMedia; year?: number; source?: { label: string; url: string } };
 type Tone = 'Позитивный' | 'Негативный' | 'Нейтральный' | 'Ироничный';
@@ -154,15 +156,12 @@ function usePublicCards(type: 'term' | 'meme') {
   return { cards, error };
 }
 
-function submissionEndpoint(): string {
-  return ['127.0.0.1', 'localhost'].includes(window.location.hostname) ? 'http://127.0.0.1:3001/api/submissions' : '/api/submissions';
-}
-
 function currentRoute(): Route {
   if (window.location.hash.startsWith('#/admin/login')) return 'admin-login';
   if (window.location.hash.startsWith('#/admin')) return 'admin';
   if (window.location.hash.startsWith('#/dictionary')) return 'dictionary';
   if (window.location.hash.startsWith('#/memology')) return 'memology';
+  if (window.location.hash.startsWith('#/quiz')) return 'quiz';
   if (window.location.hash.startsWith('#/submit')) return 'submit';
   return 'home';
 }
@@ -174,6 +173,7 @@ function Header({ route }: { route: Route }) {
       <nav aria-label="Основная навигация">
         <a className={route === 'dictionary' ? 'nav-active' : ''} href="#/dictionary">Словарь</a>
         <a className={route === 'memology' ? 'nav-active' : ''} href="#/memology">Мемология</a>
+        <a className={route === 'quiz' ? 'nav-active' : ''} href="#/quiz">Тест</a>
         <a className="nav-accent" href="#/submit">Добавить карточку</a>
       </nav>
       <ThemeSwitch />
@@ -185,9 +185,10 @@ function TermCard({ card, russianFirst = false, returnLetter, accent }: { card: 
   const titleParts = card.title.split(' / ');
   const displayTitle = russianFirst && titleParts.length === 2 ? `${titleParts[1]} / ${titleParts[0]}` : card.title;
   const titleClassName = displayTitle.length > 20 ? 'term-card__title--very-long' : displayTitle.length > 14 ? 'term-card__title--long' : undefined;
+  const showMeta = card.type !== 'Словарь' || card.year !== undefined;
   return (
     <article className={`term-card term-card--${accent ?? card.accent}${card.media ? ' term-card--media' : ''}`}>
-      <div className="term-card__meta"><span>{card.type}</span>{card.year && <span className="term-card__year">{card.year}</span>}</div>
+      {showMeta && <div className="term-card__meta"><span>{card.type}</span>{card.year && <span className="term-card__year">{card.year}</span>}</div>}
       {card.media && <MediaPreview card={card} compact />}
       <h3 className={titleClassName}>{displayTitle}</h3>
       <p>{card.text}</p>
@@ -242,6 +243,12 @@ function PublicTermDetail({ slug }: { slug: string }) {
 }
 
 function HomePage() {
+  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const query = String(new FormData(event.currentTarget).get('query') ?? '').trim();
+    window.location.hash = query ? `#/dictionary?q=${encodeURIComponent(query)}` : '#/dictionary';
+  };
+
   return (
     <>
       <section className="hero" aria-labelledby="hero-title">
@@ -249,9 +256,9 @@ function HomePage() {
           <p className="eyebrow"><span /> Словарь поколений</p>
           <h1 id="hero-title">Хочешь быть сигмой?<br /><em>Для начала узнай, кто это</em></h1>
           <p className="hero__lead">Skuf Skills помогает понимать друг друга: простыми словами объясняем молодёжный язык, мемы и контекст.</p>
-          <form className="search" role="search" onSubmit={(event) => event.preventDefault()}>
+          <form className="search" role="search" onSubmit={submitSearch}>
             <label className="sr-only" htmlFor="site-search">Найти слово или мем</label>
-            <input id="site-search" type="search" placeholder="имба" />
+            <input id="site-search" name="query" type="search" placeholder="имба" />
             <button type="submit">Найти</button>
           </form>
           <div className="hero__actions">
@@ -274,6 +281,7 @@ function HomePage() {
         <a href="#/dictionary"><h2>Словарь</h2><p>От «ауры» до «я в моменте» — с примерами и контекстом.</p><span>Смотреть все слова ↗</span></a>
         <a href="#/memology"><h2>Мемология</h2><p>Откуда взялся мем, что означает и когда его уместно использовать.</p><span>Разобраться в мемах ↗</span></a>
       </section>
+      <section className="quiz-home-cta"><div><p className="eyebrow"><span /> 10 вопросов · 3 уровня</p><h2>Насколько ты<br />не скуф?</h2><p>Выбери сложность, проверь знание интернет-языка и получи карточку результата для соцсетей.</p></div><a className="button button--light" href="#/quiz">Пройти тест</a></section>
       <Suggest />
     </>
   );
@@ -286,22 +294,33 @@ function PageIntro({ eyebrow, title, text }: { eyebrow: string; title: ReactNode
 function DictionaryPage() {
   const remote = usePublicCards('term');
   const allCards = [...dictionaryCards, ...remote.cards.filter((card) => !dictionaryCards.some((starter) => cardSlug(starter) === cardSlug(card)))];
-  const readLetter = () => {
+  const readFilters = () => {
     const query = window.location.hash.split('?')[1] ?? '';
-    const letter = new URLSearchParams(query).get('letter') ?? 'Все';
-    return alphabet.includes(letter) ? letter : 'Все';
+    const params = new URLSearchParams(query);
+    const letter = params.get('letter') ?? 'Все';
+    return { letter: alphabet.includes(letter) ? letter : 'Все', search: params.get('q') ?? '' };
   };
-  const [selectedLetter, setSelectedLetter] = useState(readLetter);
-  const [searchQuery, setSearchQuery] = useState('');
+  const initialFilters = readFilters();
+  const [selectedLetter, setSelectedLetter] = useState(initialFilters.letter);
+  const [searchQuery, setSearchQuery] = useState(initialFilters.search);
   useEffect(() => {
-    const syncLetter = () => setSelectedLetter(readLetter());
-    window.addEventListener('hashchange', syncLetter);
-    return () => window.removeEventListener('hashchange', syncLetter);
+    const syncFilters = () => {
+      const filters = readFilters();
+      setSelectedLetter(filters.letter);
+      setSearchQuery(filters.search);
+    };
+    window.addEventListener('hashchange', syncFilters);
+    return () => window.removeEventListener('hashchange', syncFilters);
   }, []);
   const normalizedQuery = searchQuery.trim().toLocaleLowerCase('ru-RU');
   const matchesLetter = (card: Card, letter: string) => card.title.split(' / ').some((value) => value.trim().toLocaleUpperCase('ru-RU').startsWith(letter));
   const letterCards = selectedLetter === 'Все' ? allCards : allCards.filter((card) => matchesLetter(card, selectedLetter));
-  const filteredCards = normalizedQuery ? allCards.filter((card) => [card.title, card.text, card.etymology ?? '', ...(card.aliases ?? [])].join(' ').toLocaleLowerCase('ru-RU').includes(normalizedQuery)) : letterCards;
+  const filteredCards = normalizedQuery ? allCards.filter((card) => [card.title, card.text, card.example, card.context ?? '', card.etymology ?? '', ...(card.aliases ?? [])].join(' ').toLocaleLowerCase('ru-RU').includes(normalizedQuery)) : letterCards;
+  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const nextHash = searchQuery.trim() ? `#/dictionary?q=${encodeURIComponent(searchQuery.trim())}` : '#/dictionary';
+    window.history.replaceState(window.history.state, '', nextHash);
+  };
   const selectLetter = (letter: string) => {
     setSearchQuery('');
     setSelectedLetter(letter);
@@ -312,11 +331,11 @@ function DictionaryPage() {
   return (
     <>
       <PageIntro eyebrow="Слова, которыми говорят сейчас" title={<><span>Словарь</span><span>От А до Я</span></>} text="Выбери букву или найди термин. Каждое объяснение прошло редакционную проверку." />
-      <form className="dictionary-search" role="search" onSubmit={(event) => event.preventDefault()}><label htmlFor="dictionary-search">Поиск по словарю</label><div><input id="dictionary-search" type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Slay, слей или слэй" /><button type="submit">Найти</button></div><small>Ищем по русскому и английскому написанию, произношению и значению.</small></form>
+      <form className="dictionary-search" role="search" onSubmit={submitSearch}><label htmlFor="dictionary-search">Поиск по словарю</label><div><input id="dictionary-search" type="search" value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="Slay, слей или слэй" /><button type="submit">Найти</button></div><small>Ищем по названию, написанию, объяснению, примеру и контексту.</small></form>
       {remote.error && <p className="form-status form-status--error" role="alert">Не удалось обновить словарь. Показываем встроенную подборку.</p>}
       <section className="alphabet alphabet--page" aria-label="Алфавит"><div className="alphabet__letters">{alphabet.map((letter) => <button type="button" aria-pressed={selectedLetter === letter} onClick={() => selectLetter(letter)} key={letter}>{letter}</button>)}</div></section>
       <section className="catalog catalog--page" aria-label="Словарные статьи">
-        {filteredCards.length > 0 ? <div className="card-grid card-grid--dictionary">{filteredCards.map((card, index) => <TermCard card={card} accent={cardPalette[index % cardPalette.length] ?? 'violet'} russianFirst={/^[А-ЯЁ]$/u.test(selectedLetter)} returnLetter={selectedLetter} key={card.title} />)}</div> : <div className="empty-state"><span>¯\\_(ツ)_/¯</span><h2>На эту букву пока ничего нет</h2><p>Знаешь подходящее слово? Отправь его редакции — регистрация не нужна.</p><a className="button button--dark" href="#/submit">Добавить термин</a></div>}
+        {filteredCards.length > 0 ? <div className="card-grid card-grid--dictionary">{filteredCards.map((card, index) => <TermCard card={card} accent={cardPalette[index % cardPalette.length] ?? 'violet'} russianFirst={/^[А-ЯЁ]$/u.test(selectedLetter)} returnLetter={selectedLetter} key={card.title} />)}</div> : <div className="empty-state"><span>¯\\_(ツ)_/¯</span><h2>{normalizedQuery ? 'Ничего не нашли' : 'На эту букву пока ничего нет'}</h2><p>{normalizedQuery ? 'Попробуй другое написание или более короткий запрос.' : 'Знаешь подходящее слово? Отправь его редакции — регистрация не нужна.'}</p>{!normalizedQuery && <a className="button button--dark" href="#/submit">Добавить термин</a>}</div>}
       </section>
     </>
   );
@@ -351,7 +370,11 @@ function SubmitPage() {
     const controller = new AbortController();
     setEditMissing(false);
     void publicRequest<PublicContent>(`/api/content/${encodeURIComponent(editSlug)}`, controller.signal)
-      .then((item) => setRemoteEditCard(publicCard(item)))
+      .then((item) => {
+        const remoteCard = publicCard(item);
+        setRemoteEditCard(remoteCard);
+        if (remoteCard.media?.kind === 'video') setVideoUrl(remoteCard.media.url);
+      })
       .catch((reason: unknown) => { if (!(reason instanceof DOMException && reason.name === 'AbortError')) setEditMissing(true); });
     return () => controller.abort();
   }, [editSlug, starterCard]);
@@ -374,7 +397,7 @@ function SubmitPage() {
       ? { ...shared, type: 'term', context: value('context'), ...(origin ? { origin } : {}) }
       : { ...shared, type: 'meme', origin, media: { kind: 'video', url: value('videoUrl') } };
     try {
-      const response = await fetch(submissionEndpoint(), {
+      const response = await fetch(apiUrl('/api/submissions'), {
         method: 'POST', headers: { 'content-type': 'application/json', 'idempotency-key': idempotencyKey }, body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error('submission failed');
@@ -443,7 +466,7 @@ function SubmitPage() {
       ? { ...shared, type: 'meme', origin, media: { kind: 'video', url: String(values.get('videoUrl') ?? '').trim() } }
       : { ...shared, type: 'term', context: String(values.get('context') ?? ''), ...(origin ? { origin } : {}), correction: { ...shared.correction, original: { ...shared.correction.original, context: cardContext(card) } } };
     try {
-      const response = await fetch(submissionEndpoint(), {
+      const response = await fetch(apiUrl('/api/submissions'), {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() },
         body: JSON.stringify(payload),
@@ -506,7 +529,7 @@ export function App() {
   return (
     <div className="site-shell">
       <Header route={route} />
-      <main>{detailCard ? <TermDetail card={detailCard} /> : detailSlug ? <PublicTermDetail slug={detailSlug} /> : route === 'admin-login' ? <AdminLoginPage /> : adminContentId ? <AdminEditorPage id={adminContentId} /> : route === 'admin' ? <AdminQueuePage /> : route === 'dictionary' ? <DictionaryPage /> : route === 'memology' ? <MemologyPage /> : route === 'submit' ? <SubmitPage /> : <HomePage />}</main>
+      <main>{detailCard ? <TermDetail card={detailCard} /> : detailSlug ? <PublicTermDetail slug={detailSlug} /> : route === 'admin-login' ? <AdminLoginPage /> : adminContentId ? <AdminEditorPage id={adminContentId} /> : route === 'admin' ? <AdminQueuePage /> : route === 'dictionary' ? <DictionaryPage /> : route === 'memology' ? <MemologyPage /> : route === 'quiz' ? <QuizPage /> : route === 'submit' ? <SubmitPage /> : <HomePage />}</main>
       <footer><a className="brand brand--footer" href="#/"><span>SKUF</span><span>СКИЛС</span></a><p>Скуф сегодня, сигма завтра</p><small>© 2026 · Сделано командой <a href="https://babrbook.com" target="_blank" rel="noopener noreferrer">Бабрбук</a></small></footer>
     </div>
   );

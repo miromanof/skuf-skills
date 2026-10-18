@@ -16,8 +16,15 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  worker:
+    uses: ./.github/workflows/worker.yml
+    secrets: inherit
+
   build:
+    needs: worker
     runs-on: ubuntu-latest
+    env:
+      VITE_API_BASE_URL: https://api.skufskills.ru
     steps:
       - name: Checkout
         uses: actions/checkout@v4

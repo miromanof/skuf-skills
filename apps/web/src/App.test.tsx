@@ -39,6 +39,30 @@ describe('App', () => {
     expect(sequences[1]?.textContent).toBe(sequences[0]?.textContent);
   });
 
+  it('links the quiz from the header and home call to action', () => {
+    window.location.hash = '#/';
+    render(<App />);
+    expect(screen.getByRole('link', { name: 'Тест' })).toHaveAttribute('href', '#/quiz');
+    expect(screen.getByRole('link', { name: 'Пройти тест' })).toHaveAttribute('href', '#/quiz');
+
+    window.location.hash = '#/quiz';
+    fireEvent(window, new HashChangeEvent('hashchange'));
+    expect(screen.getByRole('heading', { name: /насколько ты не скуф/i })).toBeInTheDocument();
+  });
+
+  it('opens dictionary results from the home search', async () => {
+    window.location.hash = '#/';
+    render(<App />);
+
+    fireEvent.change(screen.getByRole('searchbox', { name: 'Найти слово или мем' }), { target: { value: 'имба' } });
+    fireEvent.click(screen.getByRole('button', { name: /^Найти$/ }));
+
+    await waitFor(() => expect(window.location.hash).toBe('#/dictionary?q=%D0%B8%D0%BC%D0%B1%D0%B0'));
+    expect(screen.getByRole('searchbox', { name: /поиск по словарю/i })).toHaveValue('имба');
+    expect(screen.getByRole('heading', { name: 'Имба' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Аура' })).not.toBeInTheDocument();
+  });
+
   it('shows dictionary content only on the dictionary route', () => {
     window.location.hash = '#/dictionary';
     const { container } = render(<App />);
@@ -47,6 +71,7 @@ describe('App', () => {
     expect(Array.from(container.querySelectorAll('.page-intro h1 > span')).map((node) => node.textContent)).toEqual(['Словарь', 'От А до Я']);
     expect(screen.getByRole('heading', { name: 'Вайб' })).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Дайте Оскар' })).not.toBeInTheDocument();
+    expect(Array.from(container.querySelectorAll('.term-card__meta')).some((node) => node.textContent === 'Словарь')).toBe(false);
   });
 
   it('filters dictionary cards by letter and shows an empty state', () => {
@@ -88,6 +113,25 @@ describe('App', () => {
 
     fireEvent.change(search, { target: { value: 'слэй' } });
     expect(screen.getByRole('heading', { name: /слей/i })).toBeInTheDocument();
+  });
+
+  it('finds cards by their usage example and context', () => {
+    window.location.hash = '#/dictionary';
+    render(<App />);
+
+    const search = screen.getByRole('searchbox', { name: /поиск по словарю/i });
+    fireEvent.change(search, { target: { value: 'кофейни' } });
+    expect(screen.getByRole('heading', { name: 'Вайб' })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Имба' })).not.toBeInTheDocument();
+  });
+
+  it('shows a search-specific empty state', () => {
+    window.location.hash = '#/dictionary?q=%D0%BD%D0%B5%D1%82%D1%82%D0%B0%D0%BA%D0%BE%D0%B3%D0%BE';
+    render(<App />);
+
+    expect(screen.getByRole('searchbox', { name: /поиск по словарю/i })).toHaveValue('неттакого');
+    expect(screen.getByRole('heading', { name: /ничего не нашли/i })).toBeInTheDocument();
+    expect(screen.queryByText(/на эту букву пока ничего нет/i)).not.toBeInTheDocument();
   });
 
   it('clears a dictionary search when a letter is selected', () => {
