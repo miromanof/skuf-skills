@@ -50,6 +50,15 @@ describe('App', () => {
     expect(screen.getByRole('heading', { name: /насколько ты не скуф/i })).toBeInTheDocument();
   });
 
+  it('gives the quiz and submission calls to action distinct visual identities', () => {
+    window.location.hash = '#/';
+    const { container } = render(<App />);
+
+    expect(container.querySelector('.quiz-home-cta__score')).toHaveTextContent('10/10');
+    expect(screen.getByText('На модерацию')).toBeInTheDocument();
+    expect(container.querySelector('.suggest__label')).toHaveTextContent('На модерацию');
+  });
+
   it('opens dictionary results from the home search', async () => {
     window.location.hash = '#/';
     render(<App />);
@@ -410,3 +419,4 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: 'Открыть оригинал на RuTube ↗' })).toHaveAttribute('href', 'https://rutube.ru/video/213843b86f37d3f56a1b23dd6ea784a5/');
   });
 });
+
