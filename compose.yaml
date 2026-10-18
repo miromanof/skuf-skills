@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: skuf
+      POSTGRES_PASSWORD: skuf_local
+      POSTGRES_DB: skuf_skills
+    ports:
+      - "5432:5432"
+    volumes:
+      - skuf-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U skuf -d skuf_skills"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  skuf-postgres:
