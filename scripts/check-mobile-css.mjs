@@ -32,6 +32,9 @@ const requiredRetroRules = [
   '[data-theme="retro"] .hero__content { min-width: 0; }',
   '[data-theme="retro"] .hero h1 br + em { white-space: normal; }',
   '[data-theme="retro"] .search { width: 100%; }',
+  '[data-theme="retro"] .home-choices > a { min-width: 0; padding-inline: clamp(32px, 6vw, 72px); }',
+  '[data-theme="retro"] .quiz-home-cta, [data-theme="retro"] .suggest { align-items: flex-start; flex-direction: column;',
+  '[data-theme="retro"] .quiz-home-cta > div, [data-theme="retro"] .suggest > div { min-width: 0; width: 100%; }',
   '[data-theme="retro"] .site-shell { width: 100%; margin: 0; border-inline: 0; }',
 ];
 
