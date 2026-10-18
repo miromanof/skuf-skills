@@ -6,6 +6,7 @@ const result: QuizResultArt = { score: 8, total: 10, band: 'Почти сигм�
 function canvasContext(overrides: Record<string, unknown> = {}) {
   return {
     fillRect: vi.fn(), fillText: vi.fn(), beginPath: vi.fn(), arc: vi.fn(), stroke: vi.fn(),
+    moveTo: vi.fn(), lineTo: vi.fn(), closePath: vi.fn(), fill: vi.fn(), strokeRect: vi.fn(),
     measureText: () => ({ width: 200 }), save: vi.fn(), restore: vi.fn(), translate: vi.fn(), rotate: vi.fn(),
     ...overrides
   } as unknown as CanvasRenderingContext2D;
@@ -22,37 +23,38 @@ describe('result card actions', () => {
     expect(blob.type).toBe('image/png');
   });
 
-  it('draws black typography and positions the test label below the logo', async () => {
+  it('uses a warm editorial palette that is distinct from the purple promo blocks', async () => {
     const drawn: Array<{ text: string; color: string }> = [];
     const fillText = vi.fn(function (this: { fillStyle: string }, text: string) { drawn.push({ text, color: this.fillStyle }); });
     const context = canvasContext({ fillText, fillStyle: '' });
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
     vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((callback) => callback(new Blob(['png'], { type: 'image/png' })));
     await renderResultCard(result);
-    expect(drawn).toContainEqual({ text: 'SKUF', color: '#fff' });
-    expect(drawn).toContainEqual({ text: 'СКИЛС', color: '#ff5dad' });
-    expect(drawn).toContainEqual({ text: '8', color: '#171717' });
-    expect(fillText).toHaveBeenCalledWith('ТЕСТ · СЛОЖНЫЙ', 115, 275);
-    expect(fillText).toHaveBeenCalledWith('/ 10', 294, 650);
+    expect(context.fillRect).toHaveBeenCalledWith(0, 0, 1080, 1080);
+    expect(drawn).toContainEqual({ text: 'SKUF', color: '#171717' });
+    expect(drawn).toContainEqual({ text: 'СКИЛС', color: '#ff5f57' });
+    expect(drawn).toContainEqual({ text: '8', color: '#2868ff' });
+    expect(fillText).toHaveBeenCalledWith('ТЕСТ · СЛОЖНЫЙ', 84, 224);
+    expect(fillText).toHaveBeenCalledWith('/ 10', 298, 650);
+    expect(context.arc).not.toHaveBeenCalled();
   });
 
-  it('draws the rotating caption in white on a tilted dark sticker', async () => {
+  it('draws the caption in ink on a tilted yellow editorial sticker', async () => {
     const drawn: Array<{ text: string; color: string }> = [];
     const fillText = vi.fn(function (this: { fillStyle: string }, text: string) { drawn.push({ text, color: this.fillStyle }); });
     const context = {
-      fillRect: vi.fn(), fillText, beginPath: vi.fn(), arc: vi.fn(), stroke: vi.fn(),
+      fillRect: vi.fn(), fillText, beginPath: vi.fn(), arc: vi.fn(), stroke: vi.fn(), moveTo: vi.fn(), lineTo: vi.fn(), closePath: vi.fn(), fill: vi.fn(), strokeRect: vi.fn(),
       measureText: (text: string) => ({ width: text.length * 18 }), save: vi.fn(), restore: vi.fn(),
       translate: vi.fn(), rotate: vi.fn(), fillStyle: ''
     } as unknown as CanvasRenderingContext2D;
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
     vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((callback) => callback(new Blob(['png'], { type: 'image/png' })));
     await renderResultCard(result);
-    expect(drawn).toContainEqual({ text: 'Я понимаю интернет', color: '#fff' });
-    expect(drawn).toContainEqual({ text: 'лучше, чем делаю вид', color: '#fff' });
+    expect(drawn).toContainEqual({ text: 'Я понимаю интернет лучше, чем делаю вид', color: '#171717' });
     expect(drawn).toContainEqual({ text: 'ПОЧТИ СИГМА', color: '#171717' });
-    expect(fillText).toHaveBeenCalledWith('ПОЧТИ СИГМА', 85, 790);
-    expect(context.translate).toHaveBeenCalledWith(520, 880);
-    expect(context.rotate).toHaveBeenCalledWith(-0.025);
+    expect(fillText).toHaveBeenCalledWith('ПОЧТИ СИГМА', 84, 790);
+    expect(context.translate).toHaveBeenCalledWith(84, 866);
+    expect(context.rotate).toHaveBeenCalledWith(-0.012);
   });
 
   it('downloads the rendered PNG', async () => {
