@@ -25,6 +25,16 @@ const requiredRules = [
   '.quiz-finish > h1 { font-size: clamp(34px, 9.5vw, 44px);',
 ];
 
+const requiredRetroRules = [
+  'width: min(1180px, calc(100% - 36px))',
+  'gap: clamp(28px, 4vw, 56px)',
+  'padding-inline: clamp(32px, 6vw, 82px)',
+  '[data-theme="retro"] .hero__content { min-width: 0; }',
+  '[data-theme="retro"] .hero h1 br + em { white-space: normal; }',
+  '[data-theme="retro"] .search { width: 100%; }',
+  '[data-theme="retro"] .site-shell { width: 100%; margin: 0; border-inline: 0; }',
+];
+
 if (!html.includes('<meta name="viewport" content="width=device-width, initial-scale=1"')) {
   throw new Error('Mobile page is missing a responsive viewport meta tag');
 }
@@ -37,4 +47,9 @@ for (const rule of requiredRules) {
   if (!mobile.includes(rule)) throw new Error(`Mobile stylesheet is missing: ${rule}`);
 }
 
+for (const rule of requiredRetroRules) {
+  if (!css.includes(rule)) throw new Error(`Retro responsive stylesheet is missing: ${rule}`);
+}
+
 console.log('Mobile readability checks passed.');
+
