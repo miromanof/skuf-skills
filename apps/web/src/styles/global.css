@@ -280,13 +280,16 @@ footer small a { text-decoration: underline; text-decoration-thickness: 2px; tex
 
 [data-theme="retro"] { --paper: #c0c0c0; --ink: #000; --lime: #00ff00; --violet: #000080; --orange: #ff00ff; font-family: "MS Sans Serif", Tahoma, sans-serif; }
 [data-theme="retro"] body { background: #008080; }
-[data-theme="retro"] .site-shell { max-width: 1180px; margin: 18px auto; border: 2px outset white; background: #c0c0c0; }
+[data-theme="retro"] .site-shell { width: min(1180px, calc(100% - 36px)); max-width: 1180px; margin: 18px auto; border: 2px outset white; background: #c0c0c0; }
 [data-theme="retro"] .topbar { border: 2px outset white; }
 [data-theme="retro"] .brand { font-family: "Times New Roman", serif; transform: none; letter-spacing: 0; line-height: .9; }
 [data-theme="retro"] .brand span:last-child { color: #000080; }
 [data-theme="retro"] h1, [data-theme="retro"] h2, [data-theme="retro"] h3 { font-family: "Times New Roman", serif; letter-spacing: 0; }
 [data-theme="retro"] h1 em { color: #000080; -webkit-text-stroke: 0; text-shadow: none; }
-[data-theme="retro"] .hero { background: #c0c0c0; }
+[data-theme="retro"] .hero h1 br + em { white-space: normal; }
+[data-theme="retro"] .hero { grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); gap: clamp(28px, 4vw, 56px); padding-inline: clamp(32px, 6vw, 82px); background: #c0c0c0; }
+[data-theme="retro"] .hero__content { min-width: 0; }
+[data-theme="retro"] .search { width: 100%; }
 [data-theme="retro"] .button, [data-theme="retro"] .search, [data-theme="retro"] .note-card, [data-theme="retro"] .term-card, [data-theme="retro"] .suggest { border: 2px outset white; box-shadow: none; }
 [data-theme="retro"] .note-card { transform: none; }
 [data-theme="retro"] .note-card__bar { color: #fff; background: #000080; }
@@ -299,7 +302,17 @@ footer small a { text-decoration: underline; text-decoration-thickness: 2px; tex
 [data-theme="retro"] .button--dark, [data-theme="retro"] .button--light { background: #c0c0c0; color: #000; }
 [data-theme="retro"] button, [data-theme="retro"] .button { border-radius: 0; }
 
+@media (max-width: 880px) {
+  [data-theme="retro"] .hero { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 520px) {
+  [data-theme="retro"] .site-shell { width: 100%; margin: 0; border-inline: 0; }
+  [data-theme="retro"] .hero { padding-inline: 20px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }*, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .ticker__track { animation: none; transform: none; }
 }
+
