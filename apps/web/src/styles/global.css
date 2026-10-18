@@ -290,6 +290,11 @@ footer small a { text-decoration: underline; text-decoration-thickness: 2px; tex
 [data-theme="retro"] .hero { grid-template-columns: minmax(0, 1fr) minmax(280px, 380px); gap: clamp(28px, 4vw, 56px); padding-inline: clamp(32px, 6vw, 82px); background: #c0c0c0; }
 [data-theme="retro"] .hero__content { min-width: 0; }
 [data-theme="retro"] .search { width: 100%; }
+[data-theme="retro"] .home-choices > a { min-width: 0; padding-inline: clamp(32px, 6vw, 72px); }
+[data-theme="retro"] .home-choices h2 { max-width: 100%; font-size: clamp(38px, 4vw, 58px); overflow-wrap: anywhere; }
+[data-theme="retro"] .quiz-home-cta, [data-theme="retro"] .suggest { align-items: flex-start; flex-direction: column; margin-inline: clamp(32px, 6vw, 72px); padding: clamp(32px, 5vw, 54px); }
+[data-theme="retro"] .quiz-home-cta > div, [data-theme="retro"] .suggest > div { min-width: 0; width: 100%; }
+[data-theme="retro"] .quiz-home-cta .button, [data-theme="retro"] .suggest .button { align-self: flex-start; }
 [data-theme="retro"] .button, [data-theme="retro"] .search, [data-theme="retro"] .note-card, [data-theme="retro"] .term-card, [data-theme="retro"] .suggest { border: 2px outset white; box-shadow: none; }
 [data-theme="retro"] .note-card { transform: none; }
 [data-theme="retro"] .note-card__bar { color: #fff; background: #000080; }
@@ -309,6 +314,8 @@ footer small a { text-decoration: underline; text-decoration-thickness: 2px; tex
 @media (max-width: 520px) {
   [data-theme="retro"] .site-shell { width: 100%; margin: 0; border-inline: 0; }
   [data-theme="retro"] .hero { padding-inline: 20px; }
+  [data-theme="retro"] .home-choices > a { padding-inline: 20px; }
+  [data-theme="retro"] .quiz-home-cta, [data-theme="retro"] .suggest { margin-inline: 20px; padding: 30px 22px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
