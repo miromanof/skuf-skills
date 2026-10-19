@@ -21,6 +21,17 @@ describe('quiz domain', () => {
     }
   });
 
+  it('requires every medium-level option to use the term being tested', () => {
+    const termRoots: Record<string, string> = {
+      Имба: 'имб', Кринж: 'кринж', Вайб: 'вайб', База: 'баз', Аура: 'аур',
+      Делулу: 'делулу', Лор: 'лор', Рофл: 'рофл', Тильт: 'тильт', Ризз: 'ризз',
+    };
+    for (const question of questionBank.medium) {
+      const termRoot = termRoots[question.eyebrow]!;
+      expect(question.options.every((option) => option.toLocaleLowerCase('ru-RU').includes(termRoot))).toBe(true);
+    }
+  });
+
   it('uses definition-like distractors without absurd giveaways on the easy level', () => {
     const bannedGiveaways = /килограмм|зарядил|вкусн|автобус|холодильник|духовк|салат|завтрак|поливать|точное время/i;
     for (const question of questionBank.easy) {
@@ -75,3 +86,4 @@ describe('quiz domain', () => {
     expect(resultCaption(score, () => 0)).toBe(expected);
   });
 });
+
