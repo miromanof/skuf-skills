@@ -11,9 +11,10 @@ export function QuizPage({ random = Math.random }: { random?: () => number }) {
   const [review, setReview] = useState(false);
   const [actionStatus, setActionStatus] = useState('');
   const [captionRandom, setCaptionRandom] = useState(0);
+  const [ownerName, setOwnerName] = useState('');
 
   const start = (nextLevel: QuizLevel) => {
-    setLevel(nextLevel); setQuestions(selectQuestions(nextLevel, 10, random)); setAnswers([]); setReview(false); setActionStatus('');
+    setLevel(nextLevel); setQuestions(selectQuestions(nextLevel, 10, random)); setAnswers([]); setReview(false); setActionStatus(''); setOwnerName('');
     setCaptionRandom(random());
   };
   const finished = questions.length === 10 && answers.length === questions.length;
@@ -21,7 +22,7 @@ export function QuizPage({ random = Math.random }: { random?: () => number }) {
   const score = answers.filter(({ question, selectedIndex }) => question.correctIndex === selectedIndex).length;
   const band = scoreBand(score);
   const caption = resultCaption(score, () => captionRandom);
-  const art: QuizResultArt = { score, total: 10, band: band.label, caption, levelLabel: level ? LEVELS[level].label : '' };
+  const art: QuizResultArt = { score, total: 10, band: band.label, caption, levelLabel: level ? LEVELS[level].label : '', ownerName };
   const mistakes = answers.filter(({ question, selectedIndex }) => question.correctIndex !== selectedIndex);
 
   if (!level) return (
@@ -52,8 +53,9 @@ export function QuizPage({ random = Math.random }: { random?: () => number }) {
       <h1>Поздравляем!<br />Тест пройден</h1>
       <p className="quiz-lead">Сохрани результат квадратной карточкой или сразу поделись им. Подробности и кнопки находятся рядом с карточкой, а на телефоне — под ней.</p>
       <div className="quiz-result">
-        <div className="quiz-result-card quiz-result-card--dark-type" aria-label={`Результат ${score} из 10 — ${band.label}`}><div className="quiz-result-card__brand"><b>SKUF</b><b>СКИЛС</b><small className="quiz-result-card__label">ТЕСТ · {LEVELS[level].label}</small></div><p className="quiz-result__score">{score}<span>/ 10</span></p><h2 className="quiz-result-card__band">{band.label}</h2><p className="quiz-result-card__caption">{caption}</p></div>
+        <div className="quiz-result-card quiz-result-card--dark-type" aria-label={`Результат ${score} из 10 — ${band.label}`}><div className="quiz-result-card__brand"><b>SKUF</b><b>СКИЛС</b><small className="quiz-result-card__label">ТЕСТ · {LEVELS[level].label}</small></div>{ownerName.trim() && <p className="quiz-result-card__owner">Карточка · {ownerName.trim()}</p>}<p className="quiz-result__score">{score}<span>/ 10</span></p><h2 className="quiz-result-card__band">{band.label}</h2><p className="quiz-result-card__caption">{caption}</p></div>
         <article className="quiz-result-panel"><p className="eyebrow"><span /> Результат</p><h2>{score} из 10.<br />{band.label}</h2><p>{band.description}</p><div className="quiz-result-panel__meter">{Array.from({ length: 10 }, (_, index) => <i key={index} className={index < score ? 'is-filled' : ''} />)}</div>
+          <label className="quiz-owner-field"><span>Имя на карточке <small>необязательно</small></span><input value={ownerName} onChange={(event) => setOwnerName(event.target.value)} maxLength={40} placeholder="Например, Дима" /></label>
           <button className="button quiz-action quiz-action--download" type="button" onClick={() => void downloadResultCard(art).then(() => setActionStatus('Карточка скачана.'))}>Скачать карточку</button>
           <button className="button quiz-action quiz-action--share" type="button" onClick={() => void shareResult(art).then((mode) => setActionStatus(mode === 'shared' ? 'Открыто системное меню публикации.' : 'Карточка скачана, а текст результата скопирован.')).catch(() => setActionStatus('Не получилось поделиться. Можно скачать карточку отдельно.'))}>Поделиться результатом</button>
           <button className="button button--dark quiz-action" type="button" onClick={() => setReview(true)}>Разобрать ошибки</button>
@@ -65,3 +67,4 @@ export function QuizPage({ random = Math.random }: { random?: () => number }) {
     </section>
   );
 }
+
