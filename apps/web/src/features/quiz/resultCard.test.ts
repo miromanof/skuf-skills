@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { downloadResultCard, renderResultCard, shareResult, type QuizResultArt } from './resultCard.js';
 
-const result: QuizResultArt = { score: 8, total: 10, band: 'Почти сигма', caption: 'Я понимаю интернет лучше, чем делаю вид', levelLabel: 'Сложный' };
+const result: QuizResultArt = { score: 8, total: 10, band: 'Почти сигма', caption: 'Я понимаю интернет лучше, чем делаю вид', levelLabel: 'Сложный', ownerName: 'Дмитрий' };
 
 function canvasContext(overrides: Record<string, unknown> = {}) {
   return {
@@ -34,7 +34,7 @@ describe('result card actions', () => {
     expect(drawn).toContainEqual({ text: 'SKUF', color: '#171717' });
     expect(drawn).toContainEqual({ text: 'СКИЛС', color: '#ff5f57' });
     expect(drawn).toContainEqual({ text: '8', color: '#2868ff' });
-    expect(fillText).toHaveBeenCalledWith('ТЕСТ · СЛОЖНЫЙ', 84, 224);
+    expect(fillText).toHaveBeenCalledWith('ТЕСТ · СЛОЖНЫЙ', 84, 238);
     expect(fillText).toHaveBeenCalledWith('/ 10', 298, 650);
     expect(context.arc).not.toHaveBeenCalled();
   });
@@ -55,6 +55,20 @@ describe('result card actions', () => {
     expect(fillText).toHaveBeenCalledWith('ПОЧТИ СИГМА', 84, 790);
     expect(context.translate).toHaveBeenCalledWith(84, 866);
     expect(context.rotate).toHaveBeenCalledWith(-0.012);
+  });
+
+  it('matches the visible card treatment in the PNG export', async () => {
+    const fillText = vi.fn();
+    const context = canvasContext({ fillText, fillStyle: '' });
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(context);
+    vi.spyOn(HTMLCanvasElement.prototype, 'toBlob').mockImplementation((callback) => callback(new Blob(['png'], { type: 'image/png' })));
+
+    await renderResultCard(result);
+
+    expect(context.translate).toHaveBeenCalledWith(84, 66);
+    expect(context.rotate).toHaveBeenCalledWith(expect.closeTo(-0.035, 3));
+    expect(context.fillRect).toHaveBeenCalledWith(8, 8, 820, expect.any(Number));
+    expect(fillText).toHaveBeenCalledWith('КАРТОЧКА · ДМИТРИЙ', 84, 335);
   });
 
   it('downloads the rendered PNG', async () => {
@@ -87,3 +101,4 @@ describe('result card actions', () => {
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining('8/10'));
   });
 });
+
