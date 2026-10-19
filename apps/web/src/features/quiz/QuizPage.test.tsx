@@ -51,4 +51,15 @@ describe('QuizPage', () => {
     expect(container.querySelector('.quiz-result-card__caption')).toHaveTextContent('Уже не офлайн, но ещё в буфере');
     expect(container.querySelector('.quiz-result-card__band')).toHaveTextContent('Скуф detected');
   });
+
+  it('adds an optional owner name to the visible result card', () => {
+    const { container } = render(<QuizPage random={() => 0} />);
+    fireEvent.click(screen.getByRole('button', { name: /лёгкий/i }));
+    for (let index = 0; index < 10; index += 1) fireEvent.click(screen.getAllByTestId('quiz-option')[0]!);
+
+    fireEvent.change(screen.getByRole('textbox', { name: /имя на карточке/i }), { target: { value: 'Дмитрий Мироманов' } });
+
+    expect(container.querySelector('.quiz-result-card__owner')).toHaveTextContent('Карточка · Дмитрий Мироманов');
+  });
 });
+
