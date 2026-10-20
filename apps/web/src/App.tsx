@@ -6,6 +6,7 @@ import { AdminQueuePage } from './features/admin/AdminQueuePage.js';
 import { AdminEditorPage } from './features/admin/AdminEditorPage.js';
 import { publicRequest, type PublicContent } from './shared/api/client.js';
 import { apiUrl } from './shared/api/origin.js';
+import { createIdempotencyKey } from './shared/idempotency-key.js';
 import { QuizPage } from './features/quiz/QuizPage.js';
 
 type Route = 'home' | 'dictionary' | 'memology' | 'quiz' | 'submit' | 'admin-login' | 'admin';
@@ -381,7 +382,7 @@ function SubmitPage() {
   const [submissionState, setSubmissionState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [newType, setNewType] = useState<'term' | 'meme' | null>(null);
   const [videoUrl, setVideoUrl] = useState(() => starterCard?.media?.kind === 'video' ? starterCard.media.url : '');
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const [idempotencyKey] = useState(createIdempotencyKey);
 
   useEffect(() => {
     if (!editSlug || starterCard) return;
@@ -486,7 +487,7 @@ function SubmitPage() {
     try {
       const response = await fetch(apiUrl('/api/submissions'), {
         method: 'POST',
-        headers: { 'content-type': 'application/json', 'idempotency-key': crypto.randomUUID() },
+        headers: { 'content-type': 'application/json', 'idempotency-key': createIdempotencyKey() },
         body: JSON.stringify(payload),
       });
       if (!response.ok) throw new Error('submission failed');
@@ -552,4 +553,5 @@ export function App() {
     </div>
   );
 }
+
 
