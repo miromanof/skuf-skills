@@ -24,6 +24,7 @@ requireText(pages, /needs:\s*worker/u, 'Pages build must wait for Worker deploym
 requireText(pages, /VITE_API_BASE_URL:\s*https:\/\/api\.skufskills\.ru/u, 'Pages build must use the production API origin');
 requireText(wrangler, /"binding"\s*:\s*"DB"/u, 'Wrangler must bind D1 as DB');
 requireText(wrangler, /"migrations_dir"\s*:\s*"migrations"/u, 'Wrangler must use the Worker migrations directory');
+requireText(wrangler, /"ALLOWED_ORIGINS"\s*:\s*"https:\/\/skufskills\.ru,https:\/\/www\.skufskills\.ru,https:\/\/miromanof\.github\.io"/u, 'Wrangler must allow the production and preview web origins');
 requireText(docs, /185\.199\.108\.153[\s\S]*185\.199\.109\.153[\s\S]*185\.199\.110\.153[\s\S]*185\.199\.111\.153/u, 'Guide must preserve all GitHub Pages A records');
 requireText(docs, /www[\s\S]*miromanof\.github\.io/u, 'Guide must preserve the www CNAME');
 requireText(docs, /wrangler d1 export/u, 'Guide must document D1 backup');
