@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <title>Skuf Skills</title>
+  <rect x="3" y="3" width="58" height="58" rx="9" fill="#c6ff2e" stroke="#151515" stroke-width="4"/>
+  <g fill="#151515">
+    <path d="M10 14h22v8H18v6h13v21H8v-8h15v-6H10z"/>
+    <path d="M34 14h8v13l8-13h8L48 31l10 18h-8l-8-13v13h-8z"/>
+  </g>
+</svg>
+
