@@ -147,11 +147,25 @@ function usePublicCards(type: 'term' | 'meme') {
   const [error, setError] = useState(false);
   useEffect(() => {
     const controller = new AbortController();
+    let retryTimer: number | undefined;
     setError(false);
-    void publicRequest<{ items: PublicContent[] }>(`/api/content?type=${type}&limit=50`, controller.signal)
-      .then((result) => setCards(result.items.map(publicCard)))
-      .catch((reason: unknown) => { if (!(reason instanceof DOMException && reason.name === 'AbortError')) setError(true); });
-    return () => controller.abort();
+    const load = () => {
+      void publicRequest<{ items: PublicContent[] }>(`/api/content?type=${type}&limit=50`, controller.signal)
+        .then((result) => {
+          setCards(result.items.map(publicCard));
+          setError(false);
+        })
+        .catch((reason: unknown) => {
+          if (reason instanceof DOMException && reason.name === 'AbortError') return;
+          setError(true);
+          retryTimer = window.setTimeout(load, 3_000);
+        });
+    };
+    load();
+    return () => {
+      controller.abort();
+      if (retryTimer !== undefined) window.clearTimeout(retryTimer);
+    };
   }, [type]);
   return { cards, error };
 }
