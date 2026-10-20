@@ -37,6 +37,21 @@
 
 Если Worker не прошёл проверку, Pages не публикуется и предыдущая рабочая версия остаётся доступной. Для отката повторно запустить успешный commit либо вернуть предыдущий commit и запустить workflow вручную.
 
+## Response Header Transform Rule для сайта
+
+GitHub Pages не позволяет задать HTTP-заголовки репозиторием. В Cloudflare откройте **Rules → Transform Rules → Modify Response Header**, создайте правило `Skuf Skills security headers` и применяйте его только при `Hostname equals skufskills.ru` или `Hostname equals www.skufskills.ru`.
+
+Задайте статические значения с операцией **Set static**:
+
+- `X-Content-Type-Options`: `nosniff`
+- `Referrer-Policy`: `no-referrer`
+- `X-Frame-Options`: `SAMEORIGIN`
+- `Permissions-Policy`: `camera=(), microphone=(), geolocation=(), payment=(), usb=()`
+
+Основная CSP уже встроена в HTML через `<meta http-equiv="Content-Security-Policy">`, потому что так она версионируется и проверяется вместе с приложением. `frame-ancestors` через meta не поддерживается, поэтому защиту от встраивания обеспечивает `X-Frame-Options`. Если позже CSP будет перенесена в HTTP-заголовок Cloudflare, сначала включите `Content-Security-Policy-Report-Only`, проверьте отчёты для API, RuTube/YouTube и внешних изображений, и только затем включайте блокирующий заголовок.
+
+После сохранения запустите `npm run check:cloud-deployment`. Команда перечисляет каждый отсутствующий production-заголовок. Для отката отключите только это Transform Rule: meta CSP и защита API продолжат работать независимо.
+
 ## Резервная копия D1
 
 Экспорт хранить локально вне Git и не добавлять в репозиторий:
@@ -46,3 +61,4 @@ npx wrangler d1 export skuf-skills-production --remote --output .data/backups/sk
 ```
 
 После экспорта проверить, что SQL содержит таблицы `content_items`, `admin_sessions` и `rate_limits`. Для регулярной сохранности достаточно делать экспорт перед изменением схемы и после крупных серий публикаций.
+

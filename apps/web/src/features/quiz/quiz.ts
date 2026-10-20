@@ -1,3 +1,5 @@
+import { mediumQuestions } from './medium-questions.js';
+
 export type QuizLevel = 'easy' | 'medium' | 'hard';
 
 export type QuizQuestion = {
@@ -96,10 +98,7 @@ const easy = seeds.map<QuizQuestion>((seed, index) => {
   return { id: `easy-${index}`, level: 'easy', eyebrow: seed.term, prompt: `Что означает «${seed.term}»?`, options, correctIndex: options.indexOf(seed.meaning), explanation: seed.explanation };
 });
 
-const medium = seeds.map<QuizQuestion>((seed, index) => {
-  const options = rotate([seed.right, ...seed.mediumWrong], (index + 1) % 4);
-  return { id: `medium-${index}`, level: 'medium', eyebrow: seed.term, prompt: `Где слово «${seed.term}» использовано правильно?`, options, correctIndex: options.indexOf(seed.right), explanation: seed.explanation };
-});
+const medium = mediumQuestions;
 
 const hard = seeds.map<QuizQuestion>((seed, index) => {
   const options = rotate([seed.term, ...seed.hardWrong], (index + 2) % 4);
@@ -124,4 +123,5 @@ export function scoreBand(score: number): ScoreBand {
   if (score <= 8) return { label: 'Почти сигма', description: 'Ты уверенно понимаешь современный язык. Осталось разобрать пару ошибок.' };
   return { label: 'Сигма словаря', description: 'Контекст пойман, термины на месте — уровень редактора мемологии.' };
 }
+
 

@@ -28,6 +28,33 @@ requireText(wrangler, /"ALLOWED_ORIGINS"\s*:\s*"https:\/\/skufskills\.ru,https:\
 requireText(docs, /185\.199\.108\.153[\s\S]*185\.199\.109\.153[\s\S]*185\.199\.110\.153[\s\S]*185\.199\.111\.153/u, 'Guide must preserve all GitHub Pages A records');
 requireText(docs, /www[\s\S]*miromanof\.github\.io/u, 'Guide must preserve the www CNAME');
 requireText(docs, /wrangler d1 export/u, 'Guide must document D1 backup');
+requireText(docs, /Response Header Transform Rule/u, 'Guide must document the Cloudflare response-header rule');
+
+const requiredHeaders = {
+  'x-content-type-options': 'nosniff',
+  'referrer-policy': 'no-referrer',
+  'permissions-policy': 'camera=()',
+};
+
+async function checkProductionHeaders(url, label, extra = {}) {
+  try {
+    const response = await fetch(url, { redirect: 'follow' });
+    if (!response.ok) failures.push(`${label} returned HTTP ${response.status}`);
+    for (const [name, fragment] of Object.entries({ ...requiredHeaders, ...extra })) {
+      const value = response.headers.get(name);
+      if (!value?.toLowerCase().includes(fragment.toLowerCase())) {
+        failures.push(`${label} is missing ${name}: expected a value containing ${fragment}`);
+      }
+    }
+  } catch (error) {
+    failures.push(`${label} could not be checked: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+await Promise.all([
+  checkProductionHeaders('https://skufskills.ru', 'Production site'),
+  checkProductionHeaders('https://api.skufskills.ru/health', 'Production API', { 'x-frame-options': 'DENY' }),
+]);
 
 if (failures.length) {
   console.error(`Cloud deployment is incomplete:\n- ${failures.join('\n- ')}`);
@@ -35,3 +62,4 @@ if (failures.length) {
 } else {
   console.log('Cloud deployment configuration is complete.');
 }
+

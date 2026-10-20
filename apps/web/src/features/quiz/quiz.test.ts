@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { LOW_SCORE_CAPTIONS, RESULT_CAPTIONS, questionBank, resultCaption, scoreBand, selectQuestions } from './quiz.js';
+import { dictionaryCards } from '../../content/builtin-cards.js';
 
 describe('quiz domain', () => {
   it('selects ten unique questions for the chosen level', () => {
@@ -22,14 +23,23 @@ describe('quiz domain', () => {
   });
 
   it('requires every medium-level option to use the term being tested', () => {
-    const termRoots: Record<string, string> = {
-      Имба: 'имб', Кринж: 'кринж', Вайб: 'вайб', База: 'баз', Аура: 'аур',
-      Делулу: 'делулу', Лор: 'лор', Рофл: 'рофл', Тильт: 'тильт', Ризз: 'ризз',
-    };
     for (const question of questionBank.medium) {
-      const termRoot = termRoots[question.eyebrow]!;
-      expect(question.options.every((option) => option.toLocaleLowerCase('ru-RU').includes(termRoot))).toBe(true);
+      const card = dictionaryCards.find((item) => item.title === question.eyebrow)!;
+      const names = [card.title.split('/')[0]!.trim(), ...(card.aliases ?? [])].map((name) => name.toLocaleLowerCase('ru-RU'));
+      expect(question.options.every((option) => names.some((name) => option.toLocaleLowerCase('ru-RU').includes(name)))).toBe(true);
     }
+  });
+
+  it('covers every built-in dictionary term exactly once on the medium level', () => {
+    expect(questionBank.medium.map((question) => question.eyebrow).sort()).toEqual(dictionaryCards.map((card) => card.title).sort());
+    expect(new Set(questionBank.medium.map((question) => question.id)).size).toBe(dictionaryCards.length);
+  });
+
+  it('keeps all four medium options unique and can select different sets', () => {
+    for (const question of questionBank.medium) expect(new Set(question.options).size).toBe(4);
+    const first = selectQuestions('medium', 10, () => 0).map((question) => question.id);
+    const second = selectQuestions('medium', 10, () => 0.999).map((question) => question.id);
+    expect(second).not.toEqual(first);
   });
 
   it('uses definition-like distractors without absurd giveaways on the easy level', () => {
@@ -86,4 +96,5 @@ describe('quiz domain', () => {
     expect(resultCaption(score, () => 0)).toBe(expected);
   });
 });
+
 
