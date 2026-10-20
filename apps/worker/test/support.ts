@@ -16,6 +16,8 @@ export async function createTestEnvironment() {
   const env: WorkerBindings = {
     DB: database,
     ADMIN_LOGIN: 'admin@example.com',
+    ADMIN_LOGIN_EMAIL: 'admin@example.com',
+    ADMIN_PASSWORD: '',
     ADMIN_PASSWORD_SALT: 'test-salt',
     ADMIN_PASSWORD_DERIVED_KEY: 'test-key',
     CURSOR_SECRET: 'cursor-secret-with-at-least-32-characters',
@@ -32,3 +34,4 @@ export const termDraft = {
   context: 'Переписка',
   tags: ['вайб'],
 };
+

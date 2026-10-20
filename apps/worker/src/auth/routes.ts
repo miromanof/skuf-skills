@@ -77,7 +77,10 @@ export function registerAuthRoutes(app: Hono<{ Bindings: WorkerBindings }>) {
     const subject = context.req.header('cf-connecting-ip') ?? 'unknown';
     const attempts = await loginAttempt(context.env.DB, subject);
     if (attempts > 5) return context.json({ error: 'Слишком много попыток. Попробуйте позже' }, 429);
-    if (login !== context.env.ADMIN_LOGIN || !await verifyPassword(password, context.env.ADMIN_PASSWORD_SALT, context.env.ADMIN_PASSWORD_DERIVED_KEY)) {
+    const passwordMatches = context.env.ADMIN_PASSWORD
+      ? secureEqual(password, context.env.ADMIN_PASSWORD)
+      : await verifyPassword(password, context.env.ADMIN_PASSWORD_SALT, context.env.ADMIN_PASSWORD_DERIVED_KEY);
+    if (login !== context.env.ADMIN_LOGIN_EMAIL || !passwordMatches) {
       return context.json({ error: 'Неверный логин или пароль' }, 401);
     }
     await context.env.DB.prepare("DELETE FROM rate_limits WHERE scope = 'login' AND subject = ?").bind(subject).run();
@@ -113,3 +116,4 @@ export function registerAuthRoutes(app: Hono<{ Bindings: WorkerBindings }>) {
     return context.body(null, 204);
   });
 }
+
