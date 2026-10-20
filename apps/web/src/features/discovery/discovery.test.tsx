@@ -1,10 +1,11 @@
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { act, cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../../App.js';
 
 describe('published discovery', () => {
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     vi.unstubAllGlobals();
     window.location.hash = '';
   });
@@ -29,6 +30,24 @@ describe('published discovery', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Не удалось обновить словарь');
     expect(screen.getByRole('heading', { name: 'Аура' })).toBeInTheDocument();
+  });
+
+  it('recovers the dictionary automatically after a temporary API failure', async () => {
+    vi.useFakeTimers();
+    window.location.hash = '#/dictionary';
+    const fetchMock = vi.fn()
+      .mockRejectedValueOnce(new Error('temporary outage'))
+      .mockResolvedValue(new Response(JSON.stringify({ items: [] }), { status: 200, headers: { 'content-type': 'application/json' } }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    render(<App />);
+    await act(async () => { await Promise.resolve(); });
+    expect(screen.getByRole('alert')).toHaveTextContent('Не удалось обновить словарь');
+
+    await act(async () => { await vi.advanceTimersByTimeAsync(3_000); });
+
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('opens a newly published card by its public slug', async () => {
