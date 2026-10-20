@@ -456,6 +456,26 @@ function Suggest() {
   return <section className="suggest"><div><p className="suggest__label">На модерацию</p><h2>Интернет сказал новое?</h2><p>Отправь слово или мем. Регистрация не нужна — публикация появится после проверки редакцией.</p></div><a className="button button--light" href="#/submit">Добавить карточку</a></section>;
 }
 
+function BackToTop() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const updateVisibility = () => setVisible(window.scrollY > 500);
+    updateVisibility();
+    window.addEventListener('scroll', updateVisibility, { passive: true });
+    return () => window.removeEventListener('scroll', updateVisibility);
+  }, []);
+
+  if (!visible) return null;
+
+  const scrollToTop = () => {
+    const reducedMotion = typeof window.matchMedia === 'function' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    window.scrollTo({ top: 0, behavior: reducedMotion ? 'auto' : 'smooth' });
+  };
+
+  return <button className="back-to-top" type="button" aria-label="Наверх" title="Наверх" onClick={scrollToTop}><span aria-hidden="true">↑</span></button>;
+}
+
 export function App() {
   const [locationHash, setLocationHash] = useState(window.location.hash);
   const route = currentRoute();
@@ -480,6 +500,7 @@ export function App() {
     <div className="site-shell">
       <Header route={route} />
       <main>{detailCard ? <TermDetail card={detailCard} /> : detailSlug ? <PublicTermDetail slug={detailSlug} /> : route === 'admin-login' ? <AdminLoginPage /> : adminContentId ? <AdminEditorPage id={adminContentId} /> : route === 'admin' ? <AdminQueuePage /> : route === 'dictionary' ? <DictionaryPage /> : route === 'memology' ? <MemologyPage /> : route === 'quiz' ? <QuizPage /> : route === 'submit' ? <SubmitPage /> : <HomePage />}</main>
+      <BackToTop />
       <footer><a className="brand brand--footer" href="#/"><span>SKUF</span><span>СКИЛС</span></a><p>Скуф сегодня, сигма завтра</p><small>© 2026 · Сделано командой <a href="https://babrbook.com" target="_blank" rel="noopener noreferrer">Бабрбук</a></small></footer>
     </div>
   );

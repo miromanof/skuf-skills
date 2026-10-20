@@ -29,6 +29,24 @@ describe('App', () => {
     expect(screen.queryByRole('heading', { name: 'Что сейчас говорят' })).not.toBeInTheDocument();
   });
 
+  it('offers a global scroll-to-top action after the page is scrolled', async () => {
+    window.location.hash = '#/dictionary';
+    const scrollTo = vi.fn();
+    vi.stubGlobal('scrollTo', scrollTo);
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 });
+    render(<App />);
+
+    expect(screen.queryByRole('button', { name: 'Наверх' })).not.toBeInTheDocument();
+
+    Object.defineProperty(window, 'scrollY', { configurable: true, value: 700 });
+    fireEvent.scroll(window);
+
+    const button = await screen.findByRole('button', { name: 'Наверх' });
+    fireEvent.click(button);
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+  });
+
   it('repeats the full ticker sequence for a seamless loop', () => {
     window.location.hash = '#/';
     const { container } = render(<App />);
@@ -419,4 +437,5 @@ describe('App', () => {
     expect(screen.getByRole('link', { name: 'Открыть оригинал на RuTube ↗' })).toHaveAttribute('href', 'https://rutube.ru/video/213843b86f37d3f56a1b23dd6ea784a5/');
   });
 });
+
 
